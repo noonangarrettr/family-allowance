@@ -1,0 +1,31 @@
+{
+  "rules": {
+    "scores": {
+      ".read": "auth != null",
+      "$week": {
+        "$boy": {
+          "$responsibility": {
+            "parent": {
+              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'parent'",
+              ".validate": "newData.hasChildren(['value','ts','by']) && newData.child('value').isNumber() && newData.child('value').val() >= 1 && newData.child('value').val() <= 3"
+            },
+            "self": {
+              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'boy' && root.child('roles/' + auth.uid + '/boyKey').val() == $boy",
+              ".validate": "newData.hasChildren(['value','ts','by']) && newData.child('value').isNumber() && newData.child('value').val() >= 1 && newData.child('value').val() <= 3"
+            }
+          }
+        }
+      }
+    },
+    "roles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid && !data.exists()"
+      }
+    },
+    "publicMeta": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#f5f1ea" />
+<title>Family</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:            #f5f1ea;
+    --surface:       #ffffff;
+    --surface-soft:  #faf7f1;
+    --ink:           #1f1d1a;
+    --ink-soft:      #55524c;
+    --ink-faint:     #9a968e;
+    --line:          #e9e3d7;
+    --accent:        #2d5a4a;
+    --accent-soft:   #e6efe9;
+    --warm:          #c47644;
+    --warm-soft:     #faede1;
+    --bad:           #b94a3a;
+    --radius:        18px;
+    --radius-sm:     12px;
+    --shadow-sm:     0 1px 2px rgba(31,29,26,0.04), 0 2px 8px rgba(31,29,26,0.04);
+    --shadow-md:     0 4px 20px rgba(31,29,26,0.06);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+    min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input { font-family: inherit; }
+
+  .app { max-width: 640px; margin: 0 auto; padding: 0; }
+
+  .topbar {
+    padding: 20px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+  }
+  .topbar h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 28px;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .topbar .who {
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+  }
+  .topbar .who button.signout {
+    color: var(--ink-faint);
+    font-size: 12px;
+    padding: 0;
+    font-weight: 500;
+  }
+  .topbar .who button.signout:hover { color: var(--ink); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin: 8px 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 4px;
+    border-radius: 12px;
+  }
+  .tabs button {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    transition: all 0.15s ease;
+  }
+  .tabs button.active {
+    background: var(--ink);
+    color: var(--surface);
+  }
+
+  .view { padding: 16px; display: none; }
+  .view.active { display: block; }
+
+  .totals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .total-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .total-card .name {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .total-card .amount {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .total-card .meta {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin: 24px 4px 10px;
+  }
+
+  .week-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .week-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .week-header .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+  .week-header .dates { font-size: 12px; color: var(--ink-faint); }
+
+  .boy-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 12px 0;
+  }
+  .boy-tabs button {
+    flex: 1;
+    padding: 10px;
+    background: var(--surface-soft);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .boy-tabs button.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .resp-list { padding: 8px 12px 12px; }
+  .resp-row {
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .resp-row:last-child { border-bottom: none; }
+  .resp-row .resp-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .resp-row .resp-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .score-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .score-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: var(--surface-soft);
+    border: 1.5px solid transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .score-btn .num {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .score-btn .lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+  }
+  .score-btn.selected[data-score="3"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .score-btn.selected[data-score="2"] {
+    background: var(--warm-soft);
+    border-color: var(--warm);
+    color: var(--warm);
+  }
+  .score-btn.selected[data-score="1"] {
+    background: #fbe8e5;
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+
+  .save-indicator {
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-align: center;
+    background: var(--surface-soft);
+  }
+  .save-indicator.saved { color: var(--accent); }
+
+  .compare-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  .compare-card .resp-head {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .compare-cell {
+    background: var(--surface-soft);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .compare-cell .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .compare-cell .val {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .compare-cell.parent { background: var(--accent-soft); color: var(--accent); }
+  .compare-cell.self { background: var(--warm-soft); color: var(--warm); }
+  .compare-cell .val.missing { color: var(--ink-faint); opacity: 0.4; }
+
+  .history-month {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  .history-month .mo {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .history-row:last-child { border: none; }
+  .history-row .amt {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 17px;
+  }
+
+  .login {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .login .brand {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .login .brand h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 40px;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  .login .brand p {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+  .login .who-are-you {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .login .role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .login .role-btn {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+  }
+  .login .role-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .login .role-btn .role-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .credential-form { display: none; }
+  .credential-form.active { display: block; }
+  .credential-form .prompt {
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .credential-form .sub {
+    text-align: center;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .credential-form input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 24px;
+    background: var(--surface);
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    text-align: center;
+    letter-spacing: 0.3em;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+  }
+  .credential-form input.normal {
+    text-align: left;
+    letter-spacing: normal;
+    font-size: 16px;
+    font-family: inherit;
+    font-weight: 400;
+  }
+  .credential-form input:focus { border-color: var(--accent); }
+  .credential-form .signin-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .credential-form .back-btn {
+    width: 100%;
+    padding: 10px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .login-error {
+    color: var(--bad);
+    font-size: 13px;
+    margin-top: 10px;
+    text-align: center;
+    min-height: 18px;
+  }
+
+  .loading {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 380px) {
+    .score-btn { padding: 10px 4px; }
+    .score-btn .num { font-size: 18px; }
+    .score-btn .lbl { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login">
+  <div class="brand">
+    <h1>Family</h1>
+    <p>Weekly check-in</p>
+  </div>
+
+  <div id="roleChooser">
+    <div class="who-are-you">Who's signing in?</div>
+    <div class="role-grid">
+      <button class="role-btn" data-role="boy" data-name="Rutherford" data-key="boy1">
+        <span class="role-label">Son</span>
+        Rutherford
+      </button>
+      <button class="role-btn" data-role="boy" data-name="Oliver" data-key="boy2">
+        <span class="role-label">Son</span>
+        Oliver
+      </button>
+      <button class="role-btn" data-role="parent" data-name="Mom">
+        <span class="role-label">Parent</span>
+        Mom
+      </button>
+      <button class="role-btn" data-role="parent" data-name="Dad">
+        <span class="role-label">Parent</span>
+        Dad
+      </button>
+    </div>
+  </div>
+
+  <div id="parentForm" class="credential-form">
+    <div class="prompt" id="parentPrompt"></div>
+    <input type="password" class="normal" id="parentPasswordInput" placeholder="Password" autocomplete="current-password" />
+    <button class="signin-btn" id="parentSigninBtn">Sign In</button>
+    <button class="back-btn parent-back">← Back</button>
+    <div class="login-error" id="parentError"></div>
+  </div>
+
+  <div id="boyForm" class="credential-form">
+    <div class="prompt" id="boyPrompt"></div>
+    <div class="sub" id="boySubPrompt"></div>
+    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+           id="boyPinInput" placeholder="• • • •" autocomplete="off" />
+    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+           id="boyPinConfirmInput" placeholder="Confirm" autocomplete="off" style="display:none;" />
+    <button class="signin-btn" id="boySigninBtn">Continue</button>
+    <button class="back-btn boy-back">← Back</button>
+    <div class="login-error" id="boyError"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen" class="app hidden">
+
+  <div class="topbar">
+    <h1>Family</h1>
+    <div class="who">
+      <span id="whoName">—</span>
+      <button class="signout" id="signoutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="week">This Week</button>
+    <button data-tab="checkin">Check-In</button>
+    <button data-tab="history">History</button>
+  </div>
+
+  <div class="view active" id="view-week">
+    <div class="section-label">Running Monthly Total</div>
+    <div class="totals" id="totalsEl">
+      <div class="loading">Loading…</div>
+    </div>
+
+    <div class="section-label" id="weekLabel">Current Week</div>
+
+    <div class="week-card">
+      <div class="week-header">
+        <div class="title" id="weekTitle">Week —</div>
+        <div class="dates" id="weekDates">—</div>
+      </div>
+
+      <div class="boy-tabs hidden" id="boyTabs">
+        <button class="active" data-boy="boy1">Rutherford</button>
+        <button data-boy="boy2">Oliver</button>
+      </div>
+
+      <div class="resp-list" id="respList"></div>
+
+      <div class="save-indicator" id="saveIndicator">Changes save automatically</div>
+    </div>
+  </div>
+
+  <div class="view" id="view-checkin">
+    <div class="section-label">Sunday Check-In — Side-by-Side</div>
+    <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;">
+      <button class="checkin-boy-tab active" data-boy="boy1" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;">Rutherford</button>
+      <button class="checkin-boy-tab" data-boy="boy2" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--ink-soft);">Oliver</button>
+    </div>
+    <div id="checkinContent">
+      <div class="loading">Loading…</div>
+    </div>
+  </div>
+
+  <div class="view" id="view-history">
+    <div class="section-label">Past Months</div>
+    <div id="historyContent">
+      <div class="loading">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, get }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ============================================================
+// CONFIG  — Paste your Firebase config object here
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDUeYJt9NpflYXPue5DuK-TSWuLkL6uzHQ",
+  authDomain: "family-allowance-78994.firebaseapp.com",
+  databaseURL: "https://family-allowance-78994-default-rtdb.firebaseio.com",
+  projectId: "family-allowance-78994",
+  storageBucket: "family-allowance-78994.firebasestorage.app",
+  messagingSenderId: "4152376582",
+  appId: "1:4152376582:web:898149fc717bbe9da0b287"
+};
+
+const PARENT_EMAILS = {
+  "Mom": "mom@family.local",
+  "Dad": "dad@family.local"
+};
+
+const BOYS = [
+  { key: "boy1", name: "Rutherford", email: "boy1@family.local" },
+  { key: "boy2", name: "Oliver",     email: "boy2@family.local" }
+];
+
+const PIN_SALT = "fam!";
+
+const RESPONSIBILITIES = [
+  { key: "self",     name: "Self-Management",       desc: "Handling school, practice, and commitments without reminders" },
+  { key: "comm",     name: "Family Communication",  desc: "Tone, respect, how you engage with family" },
+  { key: "contrib",  name: "Household Contribution", desc: "Noticing what's needed, going beyond assigned chores" },
+  { key: "follow",   name: "Follow-Through",        desc: "Doing what you say you'll do, when you say you'll do it" }
+];
+
+function calcEarned(avg) {
+  if (avg == null) return 0;
+  if (avg >= 2.5) return 40;
+  if (avg >= 2.0) return 28;
+  if (avg >= 1.5) return 16;
+  return Math.round(avg * 4);
+}
+const BASE_ALLOWANCE = 20;
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+let currentUser = null;
+let currentWeekKey = null;
+let currentMonthKey = null;
+let selectedBoy = "boy1";
+let scoresCache = {};
+let unsubscribeWeek = null;
+let pendingBoyKey = null;
+
+function getWeekKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+}
+function getMonthKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+function weekDateRange(weekKey) {
+  const [year, wStr] = weekKey.split("-W");
+  const week = parseInt(wStr, 10);
+  const jan4 = new Date(Date.UTC(parseInt(year, 10), 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const weekStart = new Date(jan4);
+  weekStart.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (week - 1) * 7);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+  const opts = { month: "short", day: "numeric" };
+  return `${weekStart.toLocaleDateString("en-US", opts)} – ${weekEnd.toLocaleDateString("en-US", opts)}`;
+}
+function weeksInMonth(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  const results = new Set();
+  const first = new Date(y, m - 1, 1);
+  const last = new Date(y, m, 0);
+  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+    results.add(getWeekKey(d));
+  }
+  return [...results];
+}
+function monthLabel(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+const loginScreen = document.getElementById("loginScreen");
+const appScreen = document.getElementById("appScreen");
+const roleChooser = document.getElementById("roleChooser");
+const parentForm = document.getElementById("parentForm");
+const boyForm = document.getElementById("boyForm");
+
+document.querySelectorAll(".role-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const role = btn.dataset.role;
+    const name = btn.dataset.name;
+    if (role === "boy") {
+      startBoyFlow(btn.dataset.key, name);
+    } else {
+      startParentFlow(name);
+    }
+  });
+});
+
+function startParentFlow(name) {
+  document.getElementById("parentPrompt").textContent = `Hi ${name} — enter your password`;
+  window.pendingParentName = name;
+  roleChooser.classList.add("hidden");
+  parentForm.classList.add("active");
+  document.getElementById("parentPasswordInput").focus();
+}
+
+document.querySelector(".parent-back").addEventListener("click", () => {
+  roleChooser.classList.remove("hidden");
+  parentForm.classList.remove("active");
+  document.getElementById("parentPasswordInput").value = "";
+  document.getElementById("parentError").textContent = "";
+});
+
+document.getElementById("parentSigninBtn").addEventListener("click", doParentSignIn);
+document.getElementById("parentPasswordInput").addEventListener("keypress", e => {
+  if (e.key === "Enter") doParentSignIn();
+});
+
+function doParentSignIn() {
+  const name = window.pendingParentName;
+  const email = PARENT_EMAILS[name];
+  const password = document.getElementById("parentPasswordInput").value;
+  const errorEl = document.getElementById("parentError");
+  errorEl.textContent = "";
+  signInWithEmailAndPassword(auth, email, password).then(async (cred) => {
+    currentUser = { role: "parent", name: name, uid: cred.user.uid };
+    await ensureRoleEntry(cred.user.uid, "parent");
+    enterApp();
+  }).catch(() => {
+    errorEl.textContent = "Sign-in failed. Check your password.";
+  });
+}
+
+async function startBoyFlow(boyKey, name) {
+  pendingBoyKey = boyKey;
+  window.pendingBoyName = name;
+
+  const pinSetSnap = await get(ref(db, `publicMeta/${boyKey}_pinSet`));
+  const pinIsSet = pinSetSnap.exists() && pinSetSnap.val() === true;
+
+  const promptEl = document.getElementById("boyPrompt");
+  const subEl = document.getElementById("boySubPrompt");
+  const confirmInput = document.getElementById("boyPinConfirmInput");
+  const btn = document.getElementById("boySigninBtn");
+
+  document.getElementById("boyPinInput").value = "";
+  document.getElementById("boyPinConfirmInput").value = "";
+  document.getElementById("boyError").textContent = "";
+
+  if (pinIsSet) {
+    promptEl.textContent = `Hi ${name}`;
+    subEl.textContent = "Enter your 4-digit PIN";
+    confirmInput.style.display = "none";
+    btn.textContent = "Sign In";
+  } else {
+    promptEl.textContent = `Hi ${name} — set up your PIN`;
+    subEl.textContent = "Pick a 4-digit PIN you'll remember. You'll use it every time.";
+    confirmInput.style.display = "block";
+    btn.textContent = "Set PIN";
+  }
+
+  roleChooser.classList.add("hidden");
+  boyForm.classList.add("active");
+  document.getElementById("boyPinInput").focus();
+}
+
+document.querySelector(".boy-back").addEventListener("click", () => {
+  roleChooser.classList.remove("hidden");
+  boyForm.classList.remove("active");
+  document.getElementById("boyPinInput").value = "";
+  document.getElementById("boyPinConfirmInput").value = "";
+  document.getElementById("boyError").textContent = "";
+});
+
+document.getElementById("boySigninBtn").addEventListener("click", doBoyFlow);
+document.getElementById("boyPinInput").addEventListener("keypress", e => {
+  if (e.key === "Enter") {
+    if (document.getElementById("boyPinConfirmInput").style.display === "none") {
+      doBoyFlow();
+    } else {
+      document.getElementById("boyPinConfirmInput").focus();
+    }
+  }
+});
+document.getElementById("boyPinConfirmInput").addEventListener("keypress", e => {
+  if (e.key === "Enter") doBoyFlow();
+});
+
+async function doBoyFlow() {
+  const boyKey = pendingBoyKey;
+  const name = window.pendingBoyName;
+  const boy = BOYS.find(b => b.key === boyKey);
+  const pin = document.getElementById("boyPinInput").value.trim();
+  const confirmInput = document.getElementById("boyPinConfirmInput");
+  const isFirstTime = confirmInput.style.display !== "none";
+  const errorEl = document.getElementById("boyError");
+  errorEl.textContent = "";
+
+  if (!/^\d{4}$/.test(pin)) {
+    errorEl.textContent = "PIN must be 4 digits.";
+    return;
+  }
+
+  const fullPassword = pin + PIN_SALT;
+
+  if (isFirstTime) {
+    const confirmPin = confirmInput.value.trim();
+    if (pin !== confirmPin) {
+      errorEl.textContent = "PINs don't match. Try again.";
+      return;
+    }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, boy.email, fullPassword);
+      await ensureRoleEntry(cred.user.uid, "boy", boyKey);
+      await set(ref(db, `publicMeta/${boyKey}_pinSet`), true);
+      currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
+      enterApp();
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        errorEl.textContent = "This account already exists. Ask a parent for help.";
+      } else {
+        errorEl.textContent = "Couldn't create PIN: " + err.message;
+      }
+    }
+  } else {
+    try {
+      const cred = await signInWithEmailAndPassword(auth, boy.email, fullPassword);
+      currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
+      enterApp();
+    } catch (err) {
+      errorEl.textContent = "Wrong PIN. Try again.";
+    }
+  }
+}
+
+async function ensureRoleEntry(uid, role, boyKey = null) {
+  const snap = await get(ref(db, `roles/${uid}`));
+  if (!snap.exists()) {
+    const payload = boyKey ? { role, boyKey } : { role };
+    await set(ref(db, `roles/${uid}`), payload);
+  }
+}
+
+document.getElementById("signoutBtn").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    currentUser = null;
+    if (unsubscribeWeek) { unsubscribeWeek(); unsubscribeWeek = null; }
+    appScreen.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+    roleChooser.classList.remove("hidden");
+    parentForm.classList.remove("active");
+    boyForm.classList.remove("active");
+    document.getElementById("parentPasswordInput").value = "";
+    document.getElementById("boyPinInput").value = "";
+    document.getElementById("boyPinConfirmInput").value = "";
+  });
+});
+
+function enterApp() {
+  currentWeekKey = getWeekKey();
+  currentMonthKey = getMonthKey();
+  loginScreen.classList.add("hidden");
+  appScreen.classList.remove("hidden");
+  document.getElementById("whoName").textContent = currentUser.name;
+
+  if (currentUser.role === "parent") {
+    document.getElementById("boyTabs").classList.remove("hidden");
+    selectedBoy = "boy1";
+  } else {
+    document.getElementById("boyTabs").classList.add("hidden");
+    selectedBoy = currentUser.boyKey;
+  }
+
+  renderWeekView();
+  subscribeToWeekScores();
+  renderCheckinView();
+  renderHistoryView();
+  updateTotals();
+}
+
+document.querySelectorAll(".tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "history") renderHistoryView();
+  });
+});
+
+document.querySelectorAll(".boy-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".boy-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedBoy = btn.dataset.boy;
+    renderRespList();
+  });
+});
+
+document.querySelectorAll(".checkin-boy-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".checkin-boy-tab").forEach(b => {
+      b.classList.remove("active");
+      b.style.background = "";
+      b.style.color = "var(--ink-soft)";
+    });
+    btn.classList.add("active");
+    btn.style.background = "var(--ink)";
+    btn.style.color = "var(--surface)";
+    renderCheckinView(btn.dataset.boy);
+  });
+});
+setTimeout(() => {
+  const first = document.querySelector(".checkin-boy-tab.active");
+  if (first) { first.style.background = "var(--ink)"; first.style.color = "var(--surface)"; }
+}, 0);
+
+function renderWeekView() {
+  document.getElementById("weekTitle").textContent = "This Week";
+  document.getElementById("weekDates").textContent = weekDateRange(currentWeekKey);
+  renderRespList();
+}
+
+function renderRespList() {
+  const list = document.getElementById("respList");
+  list.innerHTML = "";
+
+  const boyKey = selectedBoy;
+  let scorerKey;
+  let canEdit = false;
+  if (currentUser.role === "parent") {
+    scorerKey = "parent";
+    canEdit = true;
+  } else {
+    scorerKey = "self";
+    canEdit = (currentUser.boyKey === boyKey);
+  }
+
+  RESPONSIBILITIES.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "resp-row";
+
+    const currentScore = scoresCache?.[boyKey]?.[r.key]?.[scorerKey]?.value ?? null;
+
+    row.innerHTML = `
+      <div class="resp-name">${r.name}</div>
+      <div class="resp-desc">${r.desc}</div>
+      <div class="score-buttons">
+        ${[1,2,3].map(n => `
+          <button class="score-btn ${currentScore === n ? "selected" : ""}"
+                  data-score="${n}" data-resp="${r.key}"
+                  ${!canEdit ? "disabled" : ""}
+                  style="${!canEdit ? "opacity:0.55;cursor:default;" : ""}">
+            <span class="num">${n}</span>
+            <span class="lbl">${n === 3 ? "Owned" : n === 2 ? "Mostly" : "Work"}</span>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  if (!canEdit && currentUser.role === "boy") {
+    document.getElementById("saveIndicator").textContent =
+      "Viewing only — you can only enter your own self-scores";
+  } else {
+    document.getElementById("saveIndicator").textContent = "Changes save automatically";
+  }
+
+  list.querySelectorAll(".score-btn").forEach(btn => {
+    if (btn.disabled) return;
+    btn.addEventListener("click", () => {
+      const score = parseInt(btn.dataset.score, 10);
+      const respKey = btn.dataset.resp;
+      saveScore(boyKey, respKey, scorerKey, score);
+    });
+  });
+}
+
+function saveScore(boyKey, respKey, scorerKey, score) {
+  const path = `scores/${currentWeekKey}/${boyKey}/${respKey}/${scorerKey}`;
+  const indicator = document.getElementById("saveIndicator");
+  indicator.textContent = "Saving…";
+  indicator.classList.remove("saved");
+  set(ref(db, path), {
+    value: score,
+    ts: Date.now(),
+    by: currentUser.name
+  }).then(() => {
+    indicator.textContent = "Saved";
+    indicator.classList.add("saved");
+    setTimeout(() => {
+      indicator.textContent = "Changes save automatically";
+      indicator.classList.remove("saved");
+    }, 1500);
+  }).catch(err => {
+    indicator.textContent = "Error saving: " + err.message;
+  });
+}
+
+function subscribeToWeekScores() {
+  if (unsubscribeWeek) unsubscribeWeek();
+  const weekRef = ref(db, `scores/${currentWeekKey}`);
+  unsubscribeWeek = onValue(weekRef, snap => {
+    scoresCache = snap.val() || {};
+    renderRespList();
+    const activeBoyTab = document.querySelector(".checkin-boy-tab.active");
+    renderCheckinView(activeBoyTab ? activeBoyTab.dataset.boy : "boy1");
+    updateTotals();
+  });
+}
+
+async function renderCheckinView(boyKey = "boy1") {
+  const container = document.getElementById("checkinContent");
+  const snap = await get(ref(db, `scores/${currentWeekKey}/${boyKey}`));
+  const data = snap.val() || {};
+
+  container.innerHTML = "";
+  RESPONSIBILITIES.forEach(r => {
+    const respScores = data[r.key] || {};
+    const parent = respScores.parent?.value ?? null;
+    const self = respScores.self?.value ?? null;
+
+    const card = document.createElement("div");
+    card.className = "compare-card";
+    card.innerHTML = `
+      <div class="resp-head">${r.name}</div>
+      <div class="compare-grid">
+        <div class="compare-cell parent">
+          <div class="label">Parents</div>
+          <div class="val ${parent == null ? "missing" : ""}">${parent ?? "—"}</div>
+        </div>
+        <div class="compare-cell self">
+          <div class="label">Self</div>
+          <div class="val ${self == null ? "missing" : ""}">${self ?? "—"}</div>
+        </div>
+        <div class="compare-cell">
+          <div class="label">Gap</div>
+          <div class="val ${(parent == null || self == null) ? "missing" : ""}">
+            ${(parent != null && self != null) ? Math.abs(parent - self) : "—"}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function updateTotals() {
+  const totalsEl = document.getElementById("totalsEl");
+  const weekKeys = weeksInMonth(currentMonthKey);
+  const results = {};
+  for (const boy of BOYS) results[boy.key] = { sumAvg: 0, weeksCounted: 0 };
+
+  for (const wk of weekKeys) {
+    const snap = await get(ref(db, `scores/${wk}`));
+    const wkData = snap.val();
+    if (!wkData) continue;
+    for (const boy of BOYS) {
+      const boyData = wkData[boy.key];
+      if (!boyData) continue;
+      let weekSum = 0, weekCount = 0;
+      for (const r of RESPONSIBILITIES) {
+        const rs = boyData[r.key] || {};
+        const parent = rs.parent?.value;
+        if (parent != null) { weekSum += parent; weekCount++; }
+      }
+      if (weekCount > 0) {
+        results[boy.key].sumAvg += weekSum / weekCount;
+        results[boy.key].weeksCounted++;
+      }
+    }
+  }
+
+  totalsEl.innerHTML = "";
+  for (const boy of BOYS) {
+    const r = results[boy.key];
+    const monthAvg = r.weeksCounted > 0 ? (r.sumAvg / r.weeksCounted) : null;
+    const earned = calcEarned(monthAvg);
+    const total = BASE_ALLOWANCE + earned;
+    const card = document.createElement("div");
+    card.className = "total-card";
+    card.innerHTML = `
+      <div class="name">${boy.name}</div>
+      <div class="amount">$${total}</div>
+      <div class="meta">Base $${BASE_ALLOWANCE} + Earned $${earned}${monthAvg != null ? ` · avg ${monthAvg.toFixed(2)}` : ""}</div>
+    `;
+    totalsEl.appendChild(card);
+  }
+}
+
+async function renderHistoryView() {
+  const container = document.getElementById("historyContent");
+  container.innerHTML = '<div class="loading">Loading…</div>';
+
+  const allScoresSnap = await get(ref(db, `scores`));
+  const all = allScoresSnap.val() || {};
+
+  const byMonth = {};
+  for (const wk in all) {
+    const [y, wStr] = wk.split("-W");
+    const week = parseInt(wStr, 10);
+    const jan4 = new Date(parseInt(y, 10), 0, 4);
+    const mid = new Date(jan4);
+    mid.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (week - 1) * 7 + 3);
+    const mk = getMonthKey(mid);
+    if (!byMonth[mk]) byMonth[mk] = {};
+    byMonth[mk][wk] = all[wk];
+  }
+
+  const months = Object.keys(byMonth).sort().reverse();
+  if (months.length === 0) {
+    container.innerHTML = '<div style="color:var(--ink-faint);padding:40px 20px;text-align:center;font-size:14px;">No history yet. Complete your first week to see it here.</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  for (const mk of months) {
+    const monthData = byMonth[mk];
+    const block = document.createElement("div");
+    block.className = "history-month";
+    let inner = `<div class="mo">${monthLabel(mk)}</div>`;
+
+    for (const boy of BOYS) {
+      let sumAvg = 0, weeksCounted = 0;
+      for (const wk in monthData) {
+        const boyData = monthData[wk][boy.key];
+        if (!boyData) continue;
+        let weekSum = 0, weekCount = 0;
+        for (const r of RESPONSIBILITIES) {
+          const rs = boyData[r.key] || {};
+          const parent = rs.parent?.value;
+          if (parent != null) { weekSum += parent; weekCount++; }
+        }
+        if (weekCount > 0) { sumAvg += weekSum / weekCount; weeksCounted++; }
+      }
+      const monthAvg = weeksCounted > 0 ? (sumAvg / weeksCounted) : null;
+      const earned = calcEarned(monthAvg);
+      const total = BASE_ALLOWANCE + earned;
+      inner += `
+        <div class="history-row">
+          <div>
+            <div>${boy.name}</div>
+            <div style="font-size:11px;color:var(--ink-faint);">
+              ${monthAvg != null ? `avg ${monthAvg.toFixed(2)}` : "no data"} · ${weeksCounted} wk${weeksCounted === 1 ? "" : "s"}
+            </div>
+          </div>
+          <div class="amt">$${total}</div>
+        </div>
+      `;
+    }
+    block.innerHTML = inner;
+    container.appendChild(block);
+  }
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user && !currentUser) {
+    const snap = await get(ref(db, `roles/${user.uid}`));
+    if (snap.exists()) {
+      const roleData = snap.val();
+      if (roleData.role === "parent") {
+        const email = user.email;
+        const name = Object.keys(PARENT_EMAILS).find(k => PARENT_EMAILS[k] === email) || "Parent";
+        currentUser = { role: "parent", name, uid: user.uid };
+        enterApp();
+      } else if (roleData.role === "boy") {
+        const boy = BOYS.find(b => b.key === roleData.boyKey);
+        if (boy) {
+          currentUser = { role: "boy", name: boy.name, uid: user.uid, boyKey: boy.key };
+          enterApp();
+        }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
