@@ -335,6 +335,70 @@
     font-size: 17px;
   }
 
+  .month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .month-header .mo {
+    margin-bottom: 0;
+  }
+  .month-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lock-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .lock-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface-soft);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    transition: all 0.15s ease;
+  }
+  .lock-btn:hover {
+    background: var(--ink);
+    color: var(--surface);
+    border-color: var(--ink);
+  }
+  .lock-btn.unlock {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+  .lock-btn.unlock:hover {
+    background: var(--accent);
+    color: var(--surface);
+  }
+  .locked-banner {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 12px 12px;
+  }
+
   .login {
     min-height: 100vh;
     display: flex;
@@ -607,7 +671,7 @@ const firebaseConfig = {
   messagingSenderId: "4152376582",
   appId: "1:4152376582:web:898149fc717bbe9da0b287"
 };
-
+  
 const PARENT_EMAILS = {
   "Mom": "mom@family.local",
   "Dad": "dad@family.local"
@@ -646,7 +710,12 @@ let currentMonthKey = null;
 let selectedBoy = "boy1";
 let scoresCache = {};
 let unsubscribeWeek = null;
+let unsubscribeLocks = null;
+let lockedMonthsCache = {};
 let pendingBoyKey = null;
+
+// Which parent can lock/unlock months. Change to ["Mom", "Dad"] if both should be able to.
+const LOCK_AUTHORIZED_PARENTS = ["Dad"];
 
 function getWeekKey(date = new Date()) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -853,6 +922,7 @@ document.getElementById("signoutBtn").addEventListener("click", () => {
   signOut(auth).then(() => {
     currentUser = null;
     if (unsubscribeWeek) { unsubscribeWeek(); unsubscribeWeek = null; }
+    if (unsubscribeLocks) { unsubscribeLocks(); unsubscribeLocks = null; }
     appScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     roleChooser.classList.remove("hidden");
@@ -881,9 +951,46 @@ function enterApp() {
 
   renderWeekView();
   subscribeToWeekScores();
+  subscribeToLocks();
   renderCheckinView();
   renderHistoryView();
   updateTotals();
+}
+
+function subscribeToLocks() {
+  if (unsubscribeLocks) unsubscribeLocks();
+  const locksRef = ref(db, `lockedMonths`);
+  unsubscribeLocks = onValue(locksRef, snap => {
+    lockedMonthsCache = snap.val() || {};
+    renderRespList();
+    renderHistoryView();
+  });
+}
+
+async function toggleMonthLock(monthKey, shouldLock) {
+  if (!LOCK_AUTHORIZED_PARENTS.includes(currentUser?.name)) {
+    alert(`Only ${LOCK_AUTHORIZED_PARENTS.join(" or ")} can lock months.`);
+    return;
+  }
+  const label = monthLabel(monthKey);
+  const action = shouldLock ? "lock" : "unlock";
+  const msg = shouldLock
+    ? `Lock ${label}? Scores will be frozen and no one can make changes. You can unlock it again if needed.`
+    : `Unlock ${label}? Scores will be editable again.`;
+  if (!confirm(msg)) return;
+
+  try {
+    if (shouldLock) {
+      await set(ref(db, `lockedMonths/${monthKey}`), {
+        lockedAt: Date.now(),
+        lockedBy: currentUser.name
+      });
+    } else {
+      await set(ref(db, `lockedMonths/${monthKey}`), null);
+    }
+  } catch (err) {
+    alert(`Couldn't ${action}: ${err.message}`);
+  }
 }
 
 document.querySelectorAll(".tabs button").forEach(btn => {
@@ -944,6 +1051,20 @@ function renderRespList() {
     canEdit = (currentUser.boyKey === boyKey);
   }
 
+  const isLocked = !!lockedMonthsCache[currentMonthKey];
+  if (isLocked) canEdit = false;
+
+  // Insert locked banner if needed
+  const existingBanner = document.getElementById("weekLockedBanner");
+  if (existingBanner) existingBanner.remove();
+  if (isLocked) {
+    const banner = document.createElement("div");
+    banner.id = "weekLockedBanner";
+    banner.className = "locked-banner";
+    banner.innerHTML = `🔒 <span>${monthLabel(currentMonthKey)} is locked. Scores are final.</span>`;
+    list.parentElement.insertBefore(banner, list);
+  }
+
   RESPONSIBILITIES.forEach(r => {
     const row = document.createElement("div");
     row.className = "resp-row";
@@ -956,7 +1077,7 @@ function renderRespList() {
       <div class="score-buttons">
         ${[1,2,3].map(n => `
           <button class="score-btn ${currentScore === n ? "selected" : ""}"
-                  data-score="${n}" data-resp="${r.key}"
+                  data-score="${n}" data-resp="${r.key}" data-current="${currentScore}"
                   ${!canEdit ? "disabled" : ""}
                   style="${!canEdit ? "opacity:0.55;cursor:default;" : ""}">
             <span class="num">${n}</span>
@@ -968,11 +1089,15 @@ function renderRespList() {
     list.appendChild(row);
   });
 
-  if (!canEdit && currentUser.role === "boy") {
-    document.getElementById("saveIndicator").textContent =
-      "Viewing only — you can only enter your own self-scores";
+  const indicator = document.getElementById("saveIndicator");
+  if (isLocked) {
+    indicator.textContent = "Month locked — scores cannot be changed";
+  } else if (!canEdit && currentUser.role === "boy") {
+    indicator.textContent = "Viewing only — you can only enter your own self-scores";
+  } else if (canEdit) {
+    indicator.textContent = "Tap a score to set it. Tap again to clear.";
   } else {
-    document.getElementById("saveIndicator").textContent = "Changes save automatically";
+    indicator.textContent = "Changes save automatically";
   }
 
   list.querySelectorAll(".score-btn").forEach(btn => {
@@ -980,22 +1105,37 @@ function renderRespList() {
     btn.addEventListener("click", () => {
       const score = parseInt(btn.dataset.score, 10);
       const respKey = btn.dataset.resp;
-      saveScore(boyKey, respKey, scorerKey, score);
+      const current = btn.dataset.current === "null" ? null : parseInt(btn.dataset.current, 10);
+      // If tapping the already-selected score, clear it
+      if (current === score) {
+        saveScore(boyKey, respKey, scorerKey, null);
+      } else {
+        saveScore(boyKey, respKey, scorerKey, score);
+      }
     });
   });
 }
 
 function saveScore(boyKey, respKey, scorerKey, score) {
+  // Check if month is locked
+  if (lockedMonthsCache[currentMonthKey]) {
+    const indicator = document.getElementById("saveIndicator");
+    indicator.textContent = "This month is locked";
+    return;
+  }
+
   const path = `scores/${currentWeekKey}/${boyKey}/${respKey}/${scorerKey}`;
   const indicator = document.getElementById("saveIndicator");
   indicator.textContent = "Saving…";
   indicator.classList.remove("saved");
-  set(ref(db, path), {
-    value: score,
-    ts: Date.now(),
-    by: currentUser.name
-  }).then(() => {
-    indicator.textContent = "Saved";
+
+  // If score is null, we're clearing (unselecting)
+  const operation = score == null
+    ? set(ref(db, path), null)
+    : set(ref(db, path), { value: score, ts: Date.now(), by: currentUser.name });
+
+  operation.then(() => {
+    indicator.textContent = score == null ? "Cleared" : "Saved";
     indicator.classList.add("saved");
     setTimeout(() => {
       indicator.textContent = "Changes save automatically";
@@ -1099,7 +1239,10 @@ async function updateTotals() {
 
 async function renderHistoryView() {
   const container = document.getElementById("historyContent");
-  container.innerHTML = '<div class="loading">Loading…</div>';
+  // Only show loading on first call
+  if (!container.innerHTML || container.querySelector(".loading")) {
+    container.innerHTML = '<div class="loading">Loading…</div>';
+  }
 
   const allScoresSnap = await get(ref(db, `scores`));
   const all = allScoresSnap.val() || {};
@@ -1116,19 +1259,38 @@ async function renderHistoryView() {
     byMonth[mk][wk] = all[wk];
   }
 
+  // Also include current month even if no scores yet (so Dad can lock an empty month if needed)
+  if (!byMonth[currentMonthKey]) byMonth[currentMonthKey] = {};
+
   const months = Object.keys(byMonth).sort().reverse();
   if (months.length === 0) {
     container.innerHTML = '<div style="color:var(--ink-faint);padding:40px 20px;text-align:center;font-size:14px;">No history yet. Complete your first week to see it here.</div>';
     return;
   }
 
+  const canLock = LOCK_AUTHORIZED_PARENTS.includes(currentUser?.name);
+
   container.innerHTML = "";
   for (const mk of months) {
     const monthData = byMonth[mk];
+    const isLocked = !!lockedMonthsCache[mk];
     const block = document.createElement("div");
     block.className = "history-month";
-    let inner = `<div class="mo">${monthLabel(mk)}</div>`;
 
+    let headerHtml = `
+      <div class="month-header">
+        <div class="mo">${monthLabel(mk)}</div>
+        <div class="month-header-right">
+          ${isLocked ? `<span class="lock-badge">🔒 Locked</span>` : ""}
+          ${canLock ? `<button class="lock-btn ${isLocked ? "unlock" : ""}" data-month="${mk}" data-lock="${!isLocked}">
+            ${isLocked ? "Unlock" : "Lock"}
+          </button>` : ""}
+        </div>
+      </div>
+    `;
+
+    let rowsHtml = "";
+    let hasData = false;
     for (const boy of BOYS) {
       let sumAvg = 0, weeksCounted = 0;
       for (const wk in monthData) {
@@ -1142,10 +1304,11 @@ async function renderHistoryView() {
         }
         if (weekCount > 0) { sumAvg += weekSum / weekCount; weeksCounted++; }
       }
+      if (weeksCounted > 0) hasData = true;
       const monthAvg = weeksCounted > 0 ? (sumAvg / weeksCounted) : null;
       const earned = calcEarned(monthAvg);
       const total = BASE_ALLOWANCE + earned;
-      inner += `
+      rowsHtml += `
         <div class="history-row">
           <div>
             <div>${boy.name}</div>
@@ -1157,9 +1320,19 @@ async function renderHistoryView() {
         </div>
       `;
     }
-    block.innerHTML = inner;
+
+    block.innerHTML = headerHtml + rowsHtml;
     container.appendChild(block);
   }
+
+  // Wire up lock/unlock buttons
+  container.querySelectorAll(".lock-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mk = btn.dataset.month;
+      const shouldLock = btn.dataset.lock === "true";
+      toggleMonthLock(mk, shouldLock);
+    });
+  });
 }
 
 onAuthStateChanged(auth, async user => {
