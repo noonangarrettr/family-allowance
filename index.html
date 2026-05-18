@@ -159,19 +159,80 @@
     box-shadow: var(--shadow-sm);
   }
   .week-header {
-    padding: 16px 16px 12px;
+    padding: 12px;
     border-bottom: 1px solid var(--line);
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
+    gap: 8px;
+  }
+  .week-header-mid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
   }
   .week-header .title {
     font-family: 'Fraunces', serif;
     font-weight: 500;
     font-size: 20px;
     letter-spacing: -0.01em;
+    line-height: 1.1;
   }
   .week-header .dates { font-size: 12px; color: var(--ink-faint); }
+  .week-header .past-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--warm-soft);
+    color: var(--warm);
+    margin-top: 2px;
+  }
+  .week-nav {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: var(--surface-soft);
+    border-radius: 999px;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    line-height: 1;
+  }
+  .week-nav:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--surface);
+  }
+  .week-nav:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .week-jump {
+    padding: 10px 12px 0;
+    text-align: center;
+  }
+  .week-jump-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--warm-soft);
+    color: var(--warm);
+    transition: all 0.15s ease;
+  }
+  .week-jump-btn:hover {
+    background: var(--warm);
+    color: var(--surface);
+  }
 
   .boy-tabs {
     display: flex;
@@ -608,17 +669,26 @@
   </div>
 
   <div class="view active" id="view-week">
-    <div class="section-label">Running Monthly Total</div>
+    <div class="section-label" id="totalsLabel">Running Monthly Total</div>
     <div class="totals" id="totalsEl">
       <div class="loading">Loading…</div>
     </div>
 
-    <div class="section-label" id="weekLabel">Current Week</div>
+    <div class="section-label" id="weekLabel">This Week</div>
 
     <div class="week-card">
       <div class="week-header">
-        <div class="title" id="weekTitle">Week —</div>
-        <div class="dates" id="weekDates">—</div>
+        <button class="week-nav" id="weekPrevBtn" aria-label="Previous week">‹</button>
+        <div class="week-header-mid">
+          <div class="title" id="weekTitle">This Week</div>
+          <div class="dates" id="weekDates">—</div>
+          <div class="past-badge hidden" id="weekPastBadge">Prior week</div>
+        </div>
+        <button class="week-nav" id="weekNextBtn" aria-label="Next week" disabled>›</button>
+      </div>
+
+      <div class="week-jump hidden" id="weekJump">
+        <button class="week-jump-btn" id="weekTodayBtn">Jump to this week</button>
       </div>
 
       <div class="boy-tabs hidden" id="boyTabs">
@@ -633,7 +703,7 @@
   </div>
 
   <div class="view" id="view-checkin">
-    <div class="section-label">Sunday Check-In — Side-by-Side</div>
+    <div class="section-label" id="checkinLabel">Sunday Check-In — Side-by-Side</div>
     <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;">
       <button class="checkin-boy-tab active" data-boy="boy1" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;">Rutherford</button>
       <button class="checkin-boy-tab" data-boy="boy2" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--ink-soft);">Oliver</button>
@@ -708,6 +778,8 @@ const db = getDatabase(app);
 let currentUser = null;
 let currentWeekKey = null;
 let currentMonthKey = null;
+let viewingWeekKey = null;
+let viewingMonthKey = null;
 let selectedBoy = "boy1";
 let scoresCache = {};
 let unsubscribeWeek = null;
@@ -740,6 +812,25 @@ function weekDateRange(weekKey) {
   weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
   const opts = { month: "short", day: "numeric" };
   return `${weekStart.toLocaleDateString("en-US", opts)} – ${weekEnd.toLocaleDateString("en-US", opts)}`;
+}
+function weekStartDate(weekKey) {
+  const [year, wStr] = weekKey.split("-W");
+  const week = parseInt(wStr, 10);
+  const jan4 = new Date(parseInt(year, 10), 0, 4);
+  const weekStart = new Date(jan4);
+  weekStart.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (week - 1) * 7);
+  return weekStart;
+}
+function shiftWeekKey(weekKey, deltaWeeks) {
+  const start = weekStartDate(weekKey);
+  start.setDate(start.getDate() + deltaWeeks * 7);
+  return getWeekKey(start);
+}
+function weekKeyToMonthKey(weekKey) {
+  const start = weekStartDate(weekKey);
+  const mid = new Date(start);
+  mid.setDate(start.getDate() + 3);
+  return getMonthKey(mid);
 }
 function weeksInMonth(monthKey) {
   const [y, m] = monthKey.split("-").map(Number);
@@ -938,6 +1029,8 @@ document.getElementById("signoutBtn").addEventListener("click", () => {
 function enterApp() {
   currentWeekKey = getWeekKey();
   currentMonthKey = getMonthKey();
+  viewingWeekKey = currentWeekKey;
+  viewingMonthKey = currentMonthKey;
   loginScreen.classList.add("hidden");
   appScreen.classList.remove("hidden");
   document.getElementById("whoName").textContent = currentUser.name;
@@ -1031,9 +1124,37 @@ setTimeout(() => {
   if (first) { first.style.background = "var(--ink)"; first.style.color = "var(--surface)"; }
 }, 0);
 
+function setViewingWeek(weekKey) {
+  viewingWeekKey = weekKey;
+  viewingMonthKey = weekKeyToMonthKey(weekKey);
+  renderWeekView();
+  subscribeToWeekScores();
+  const activeBoyTab = document.querySelector(".checkin-boy-tab.active");
+  renderCheckinView(activeBoyTab ? activeBoyTab.dataset.boy : "boy1");
+  updateTotals();
+}
+
+document.getElementById("weekPrevBtn").addEventListener("click", () => {
+  setViewingWeek(shiftWeekKey(viewingWeekKey, -1));
+});
+document.getElementById("weekNextBtn").addEventListener("click", () => {
+  if (viewingWeekKey === currentWeekKey) return;
+  setViewingWeek(shiftWeekKey(viewingWeekKey, 1));
+});
+document.getElementById("weekTodayBtn").addEventListener("click", () => {
+  if (viewingWeekKey === currentWeekKey) return;
+  setViewingWeek(currentWeekKey);
+});
+
 function renderWeekView() {
-  document.getElementById("weekTitle").textContent = "This Week";
-  document.getElementById("weekDates").textContent = weekDateRange(currentWeekKey);
+  const isCurrent = viewingWeekKey === currentWeekKey;
+  document.getElementById("weekTitle").textContent = isCurrent ? "This Week" : "Week of " + weekDateRange(viewingWeekKey).split(" – ")[0];
+  document.getElementById("weekDates").textContent = weekDateRange(viewingWeekKey);
+  document.getElementById("weekLabel").textContent = isCurrent ? "This Week" : "Prior Week";
+  document.getElementById("weekPastBadge").classList.toggle("hidden", isCurrent);
+  document.getElementById("weekJump").classList.toggle("hidden", isCurrent);
+  document.getElementById("weekNextBtn").disabled = isCurrent;
+  document.getElementById("totalsLabel").textContent = "Running Monthly Total · " + monthLabel(viewingMonthKey);
   renderRespList();
 }
 
@@ -1052,7 +1173,7 @@ function renderRespList() {
     canEdit = (currentUser.boyKey === boyKey);
   }
 
-  const isLocked = !!lockedMonthsCache[currentMonthKey];
+  const isLocked = !!lockedMonthsCache[viewingMonthKey];
   if (isLocked) canEdit = false;
 
   // Insert locked banner if needed
@@ -1062,7 +1183,7 @@ function renderRespList() {
     const banner = document.createElement("div");
     banner.id = "weekLockedBanner";
     banner.className = "locked-banner";
-    banner.innerHTML = `🔒 <span>${monthLabel(currentMonthKey)} is locked. Scores are final.</span>`;
+    banner.innerHTML = `🔒 <span>${monthLabel(viewingMonthKey)} is locked. Scores are final.</span>`;
     list.parentElement.insertBefore(banner, list);
   }
 
@@ -1119,13 +1240,13 @@ function renderRespList() {
 
 function saveScore(boyKey, respKey, scorerKey, score) {
   // Check if month is locked
-  if (lockedMonthsCache[currentMonthKey]) {
+  if (lockedMonthsCache[viewingMonthKey]) {
     const indicator = document.getElementById("saveIndicator");
     indicator.textContent = "This month is locked";
     return;
   }
 
-  const path = `scores/${currentWeekKey}/${boyKey}/${respKey}/${scorerKey}`;
+  const path = `scores/${viewingWeekKey}/${boyKey}/${respKey}/${scorerKey}`;
   const indicator = document.getElementById("saveIndicator");
   indicator.textContent = "Saving…";
   indicator.classList.remove("saved");
@@ -1149,7 +1270,7 @@ function saveScore(boyKey, respKey, scorerKey, score) {
 
 function subscribeToWeekScores() {
   if (unsubscribeWeek) unsubscribeWeek();
-  const weekRef = ref(db, `scores/${currentWeekKey}`);
+  const weekRef = ref(db, `scores/${viewingWeekKey}`);
   unsubscribeWeek = onValue(weekRef, snap => {
     scoresCache = snap.val() || {};
     renderRespList();
@@ -1161,7 +1282,14 @@ function subscribeToWeekScores() {
 
 async function renderCheckinView(boyKey = "boy1") {
   const container = document.getElementById("checkinContent");
-  const snap = await get(ref(db, `scores/${currentWeekKey}/${boyKey}`));
+  const checkinLabel = document.getElementById("checkinLabel");
+  if (checkinLabel) {
+    const isCurrent = viewingWeekKey === currentWeekKey;
+    checkinLabel.textContent = isCurrent
+      ? "Sunday Check-In — Side-by-Side"
+      : `Check-In · ${weekDateRange(viewingWeekKey)}`;
+  }
+  const snap = await get(ref(db, `scores/${viewingWeekKey}/${boyKey}`));
   const data = snap.val() || {};
 
   container.innerHTML = "";
@@ -1197,7 +1325,7 @@ async function renderCheckinView(boyKey = "boy1") {
 
 async function updateTotals() {
   const totalsEl = document.getElementById("totalsEl");
-  const weekKeys = weeksInMonth(currentMonthKey);
+  const weekKeys = weeksInMonth(viewingMonthKey);
   const results = {};
   for (const boy of BOYS) results[boy.key] = { sumAvg: 0, weeksCounted: 0 };
 
