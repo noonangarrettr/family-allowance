@@ -6,8 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Family" />
-<meta name="theme-color" content="#f5f1ea" />
+<meta name="theme-color" content="#f5f1ea" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💵</text></svg>" />
 <title>Family</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +17,7 @@
 
 <style>
   :root {
+    color-scheme: light dark;
     --bg:            #f5f1ea;
     --surface:       #ffffff;
     --surface-soft:  #faf7f1;
@@ -27,10 +30,31 @@
     --warm:          #c47644;
     --warm-soft:     #faede1;
     --bad:           #b94a3a;
+    --bad-soft:      #fbe8e5;
     --radius:        18px;
     --radius-sm:     12px;
     --shadow-sm:     0 1px 2px rgba(31,29,26,0.04), 0 2px 8px rgba(31,29,26,0.04);
     --shadow-md:     0 4px 20px rgba(31,29,26,0.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:            #1b1916;
+      --surface:       #262320;
+      --surface-soft:  #2d2a26;
+      --ink:           #ede8df;
+      --ink-soft:      #b8b2a6;
+      --ink-faint:     #837e73;
+      --line:          #3b372f;
+      --accent:        #8ec4aa;
+      --accent-soft:   #26382f;
+      --warm:          #d99a68;
+      --warm-soft:     #3b2d20;
+      --bad:           #e28173;
+      --bad-soft:      #422823;
+      --shadow-sm:     0 1px 2px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.2);
+      --shadow-md:     0 4px 20px rgba(0,0,0,0.3);
+    }
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -106,6 +130,7 @@
     background: var(--ink);
     color: var(--surface);
   }
+  .tabs.checkin-tabs { margin: 0 0 14px; }
 
   .view { padding: 16px; display: none; }
   .view.active { display: block; }
@@ -303,6 +328,10 @@
     letter-spacing: 0.05em;
     opacity: 0.8;
   }
+  .score-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
   .score-btn.selected[data-score="3"] {
     background: var(--accent-soft);
     border-color: var(--accent);
@@ -314,7 +343,7 @@
     color: var(--warm);
   }
   .score-btn.selected[data-score="1"] {
-    background: #fbe8e5;
+    background: var(--bad-soft);
     border-color: var(--bad);
     color: var(--bad);
   }
@@ -632,25 +661,26 @@
     </div>
   </div>
 
-  <div id="parentForm" class="credential-form">
+  <form id="parentForm" class="credential-form">
     <div class="prompt" id="parentPrompt"></div>
-    <input type="password" class="normal" id="parentPasswordInput" placeholder="Password" autocomplete="current-password" />
-    <button class="signin-btn" id="parentSigninBtn">Sign In</button>
-    <button class="back-btn parent-back">← Back</button>
+    <input type="text" id="parentUsernameInput" autocomplete="username" hidden tabindex="-1" aria-hidden="true" />
+    <input type="password" class="normal" id="parentPasswordInput" placeholder="Password" aria-label="Password" autocomplete="current-password" />
+    <button type="submit" class="signin-btn" id="parentSigninBtn">Sign In</button>
+    <button type="button" class="back-btn parent-back">← Back</button>
     <div class="login-error" id="parentError"></div>
-  </div>
+  </form>
 
-  <div id="boyForm" class="credential-form">
+  <form id="boyForm" class="credential-form">
     <div class="prompt" id="boyPrompt"></div>
     <div class="sub" id="boySubPrompt"></div>
     <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4"
-           id="boyPinInput" placeholder="• • • •" autocomplete="off" />
+           id="boyPinInput" placeholder="• • • •" aria-label="4-digit PIN" autocomplete="off" />
     <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4"
-           id="boyPinConfirmInput" placeholder="Confirm" autocomplete="off" style="display:none;" />
-    <button class="signin-btn" id="boySigninBtn">Continue</button>
-    <button class="back-btn boy-back">← Back</button>
+           id="boyPinConfirmInput" placeholder="Confirm" aria-label="Confirm PIN" autocomplete="off" style="display:none;" />
+    <button type="submit" class="signin-btn" id="boySigninBtn">Continue</button>
+    <button type="button" class="back-btn boy-back">← Back</button>
     <div class="login-error" id="boyError"></div>
-  </div>
+  </form>
 </div>
 
 <!-- MAIN APP -->
@@ -664,10 +694,10 @@
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="active" data-tab="week">This Week</button>
-    <button data-tab="checkin">Check-In</button>
-    <button data-tab="history">History</button>
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" aria-selected="true" class="active" data-tab="week">This Week</button>
+    <button role="tab" aria-selected="false" data-tab="checkin">Check-In</button>
+    <button role="tab" aria-selected="false" data-tab="history">History</button>
   </div>
 
   <div class="view active" id="view-week">
@@ -693,9 +723,9 @@
         <button class="week-jump-btn" id="weekTodayBtn">Jump to this week</button>
       </div>
 
-      <div class="boy-tabs hidden" id="boyTabs">
-        <button class="active" data-boy="boy1">Rutherford</button>
-        <button data-boy="boy2">Oliver</button>
+      <div class="boy-tabs hidden" id="boyTabs" role="tablist" aria-label="Choose son">
+        <button role="tab" aria-selected="true" class="active" data-boy="boy1">Rutherford</button>
+        <button role="tab" aria-selected="false" data-boy="boy2">Oliver</button>
       </div>
 
       <div class="resp-list" id="respList"></div>
@@ -706,9 +736,9 @@
 
   <div class="view" id="view-checkin">
     <div class="section-label" id="checkinLabel">Sunday Check-In — Side-by-Side</div>
-    <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;">
-      <button class="checkin-boy-tab active" data-boy="boy1" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;">Rutherford</button>
-      <button class="checkin-boy-tab" data-boy="boy2" style="flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--ink-soft);">Oliver</button>
+    <div class="tabs checkin-tabs" role="tablist" aria-label="Choose son">
+      <button role="tab" aria-selected="true" class="checkin-boy-tab active" data-boy="boy1">Rutherford</button>
+      <button role="tab" aria-selected="false" class="checkin-boy-tab" data-boy="boy2">Oliver</button>
     </div>
     <div id="checkinContent">
       <div class="loading">Loading…</div>
@@ -728,12 +758,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, onValue, get }
+import { getDatabase, ref, set, update, onValue, get }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ============================================================
-// CONFIG  — Paste your Firebase config object here
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDUeYJt9NpflYXPue5DuK-TSWuLkL6uzHQ",
   authDomain: "family-allowance-78994.firebaseapp.com",
@@ -783,13 +810,18 @@ let currentMonthKey = null;
 let viewingWeekKey = null;
 let viewingMonthKey = null;
 let selectedBoy = "boy1";
-let scoresCache = {};
-let unsubscribeWeek = null;
+let checkinBoy = "boy1";
+let allScores = {};
+let unsubscribeScores = null;
 let unsubscribeLocks = null;
 let lockedMonthsCache = {};
 let pendingBoyKey = null;
+let pendingBoyName = null;
+let pendingParentName = null;
+let signingIn = false;
 
-// Which parent can lock/unlock months. Change to ["Mom", "Dad"] if both should be able to.
+// Which parent can lock/unlock months. The database rules enforce this too
+// (lockedMonths/lockedWeeks writes), so change both together.
 const LOCK_AUTHORIZED_PARENTS = ["Dad"];
 
 function getWeekKey(date = new Date()) {
@@ -812,7 +844,7 @@ function weekDateRange(weekKey) {
   weekStart.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (week - 1) * 7);
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
-  const opts = { month: "short", day: "numeric" };
+  const opts = { month: "short", day: "numeric", timeZone: "UTC" };
   return `${weekStart.toLocaleDateString("en-US", opts)} – ${weekEnd.toLocaleDateString("en-US", opts)}`;
 }
 function weekStartDate(weekKey) {
@@ -842,7 +874,9 @@ function weeksInMonth(monthKey) {
   for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
     results.add(getWeekKey(d));
   }
-  return [...results];
+  // A week straddling two months counts only toward the month containing its
+  // Thursday (same rule as weekKeyToMonthKey), so it's never counted twice.
+  return [...results].filter(wk => weekKeyToMonthKey(wk) === monthKey);
 }
 function monthLabel(monthKey) {
   const [y, m] = monthKey.split("-").map(Number);
@@ -869,7 +903,8 @@ document.querySelectorAll(".role-btn").forEach(btn => {
 
 function startParentFlow(name) {
   document.getElementById("parentPrompt").textContent = `Hi ${name} — enter your password`;
-  window.pendingParentName = name;
+  pendingParentName = name;
+  document.getElementById("parentUsernameInput").value = PARENT_EMAILS[name];
   roleChooser.classList.add("hidden");
   parentForm.classList.add("active");
   document.getElementById("parentPasswordInput").focus();
@@ -882,32 +917,41 @@ document.querySelector(".parent-back").addEventListener("click", () => {
   document.getElementById("parentError").textContent = "";
 });
 
-document.getElementById("parentSigninBtn").addEventListener("click", doParentSignIn);
-document.getElementById("parentPasswordInput").addEventListener("keypress", e => {
-  if (e.key === "Enter") doParentSignIn();
+parentForm.addEventListener("submit", e => {
+  e.preventDefault();
+  doParentSignIn();
 });
 
 function doParentSignIn() {
-  const name = window.pendingParentName;
+  const name = pendingParentName;
   const email = PARENT_EMAILS[name];
   const password = document.getElementById("parentPasswordInput").value;
   const errorEl = document.getElementById("parentError");
   errorEl.textContent = "";
+  signingIn = true;
   signInWithEmailAndPassword(auth, email, password).then(async (cred) => {
-    currentUser = { role: "parent", name: name, uid: cred.user.uid };
     await ensureRoleEntry(cred.user.uid, "parent");
+    currentUser = { role: "parent", name: name, uid: cred.user.uid };
     enterApp();
   }).catch(() => {
     errorEl.textContent = "Sign-in failed. Check your password.";
+  }).finally(() => {
+    signingIn = false;
   });
 }
 
 async function startBoyFlow(boyKey, name) {
   pendingBoyKey = boyKey;
-  window.pendingBoyName = name;
+  pendingBoyName = name;
 
-  const pinSetSnap = await get(ref(db, `publicMeta/${boyKey}_pinSet`));
-  const pinIsSet = pinSetSnap.exists() && pinSetSnap.val() === true;
+  let pinIsSet;
+  try {
+    const pinSetSnap = await get(ref(db, `publicMeta/${boyKey}_pinSet`));
+    pinIsSet = pinSetSnap.exists() && pinSetSnap.val() === true;
+  } catch (err) {
+    alert("Couldn't reach the server. Check your internet connection and try again.");
+    return;
+  }
 
   const promptEl = document.getElementById("boyPrompt");
   const subEl = document.getElementById("boySubPrompt");
@@ -943,23 +987,21 @@ document.querySelector(".boy-back").addEventListener("click", () => {
   document.getElementById("boyError").textContent = "";
 });
 
-document.getElementById("boySigninBtn").addEventListener("click", doBoyFlow);
-document.getElementById("boyPinInput").addEventListener("keypress", e => {
-  if (e.key === "Enter") {
-    if (document.getElementById("boyPinConfirmInput").style.display === "none") {
-      doBoyFlow();
-    } else {
-      document.getElementById("boyPinConfirmInput").focus();
-    }
-  }
+boyForm.addEventListener("submit", e => {
+  e.preventDefault();
+  doBoyFlow();
 });
-document.getElementById("boyPinConfirmInput").addEventListener("keypress", e => {
-  if (e.key === "Enter") doBoyFlow();
+document.getElementById("boyPinInput").addEventListener("keydown", e => {
+  const confirmInput = document.getElementById("boyPinConfirmInput");
+  if (e.key === "Enter" && confirmInput.style.display !== "none") {
+    e.preventDefault();
+    confirmInput.focus();
+  }
 });
 
 async function doBoyFlow() {
   const boyKey = pendingBoyKey;
-  const name = window.pendingBoyName;
+  const name = pendingBoyName;
   const boy = BOYS.find(b => b.key === boyKey);
   const pin = document.getElementById("boyPinInput").value.trim();
   const confirmInput = document.getElementById("boyPinConfirmInput");
@@ -973,34 +1015,39 @@ async function doBoyFlow() {
   }
 
   const fullPassword = pin + PIN_SALT;
+  signingIn = true;
 
-  if (isFirstTime) {
-    const confirmPin = confirmInput.value.trim();
-    if (pin !== confirmPin) {
-      errorEl.textContent = "PINs don't match. Try again.";
-      return;
-    }
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, boy.email, fullPassword);
-      await ensureRoleEntry(cred.user.uid, "boy", boyKey);
-      await set(ref(db, `publicMeta/${boyKey}_pinSet`), true);
-      currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
-      enterApp();
-    } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        errorEl.textContent = "This account already exists. Ask a parent for help.";
-      } else {
-        errorEl.textContent = "Couldn't create PIN: " + err.message;
+  try {
+    if (isFirstTime) {
+      const confirmPin = confirmInput.value.trim();
+      if (pin !== confirmPin) {
+        errorEl.textContent = "PINs don't match. Try again.";
+        return;
+      }
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, boy.email, fullPassword);
+        await ensureRoleEntry(cred.user.uid, "boy", boyKey);
+        await set(ref(db, `publicMeta/${boyKey}_pinSet`), true);
+        currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
+        enterApp();
+      } catch (err) {
+        if (err.code === "auth/email-already-in-use") {
+          errorEl.textContent = "This account already exists. Ask a parent for help.";
+        } else {
+          errorEl.textContent = "Couldn't create PIN: " + err.message;
+        }
+      }
+    } else {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, boy.email, fullPassword);
+        currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
+        enterApp();
+      } catch (err) {
+        errorEl.textContent = "Wrong PIN. Try again.";
       }
     }
-  } else {
-    try {
-      const cred = await signInWithEmailAndPassword(auth, boy.email, fullPassword);
-      currentUser = { role: "boy", name: name, uid: cred.user.uid, boyKey: boyKey };
-      enterApp();
-    } catch (err) {
-      errorEl.textContent = "Wrong PIN. Try again.";
-    }
+  } finally {
+    signingIn = false;
   }
 }
 
@@ -1015,8 +1062,10 @@ async function ensureRoleEntry(uid, role, boyKey = null) {
 document.getElementById("signoutBtn").addEventListener("click", () => {
   signOut(auth).then(() => {
     currentUser = null;
-    if (unsubscribeWeek) { unsubscribeWeek(); unsubscribeWeek = null; }
+    if (unsubscribeScores) { unsubscribeScores(); unsubscribeScores = null; }
     if (unsubscribeLocks) { unsubscribeLocks(); unsubscribeLocks = null; }
+    allScores = {};
+    lockedMonthsCache = {};
     appScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     roleChooser.classList.remove("hidden");
@@ -1027,6 +1076,20 @@ document.getElementById("signoutBtn").addEventListener("click", () => {
     document.getElementById("boyPinConfirmInput").value = "";
   });
 });
+
+function setActiveInGroup(selector, isActive) {
+  document.querySelectorAll(selector).forEach(b => {
+    const active = isActive(b);
+    b.classList.toggle("active", active);
+    b.setAttribute("aria-selected", active ? "true" : "false");
+  });
+}
+
+function selectTab(tab) {
+  setActiveInGroup(".tabs [data-tab]", b => b.dataset.tab === tab);
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + tab).classList.add("active");
+}
 
 function enterApp() {
   currentWeekKey = getWeekKey();
@@ -1045,21 +1108,39 @@ function enterApp() {
     selectedBoy = currentUser.boyKey;
   }
 
+  // Start each session from a clean slate, whoever signed in before
+  checkinBoy = "boy1";
+  selectTab("week");
+  setActiveInGroup(".boy-tabs button", b => b.dataset.boy === selectedBoy);
+  setActiveInGroup(".checkin-boy-tab", b => b.dataset.boy === checkinBoy);
+
   renderWeekView();
-  subscribeToWeekScores();
+  subscribeToScores();
   subscribeToLocks();
-  renderCheckinView();
-  renderHistoryView();
-  updateTotals();
+}
+
+function subscribeToScores() {
+  if (unsubscribeScores) unsubscribeScores();
+  unsubscribeScores = onValue(ref(db, "scores"), snap => {
+    allScores = snap.val() || {};
+    renderRespList();
+    renderCheckinView();
+    updateTotals();
+    renderHistoryView();
+  }, err => {
+    document.getElementById("saveIndicator").textContent = "Couldn't load scores: " + err.message;
+    document.getElementById("historyContent").innerHTML = '<div class="loading">Couldn\'t load history.</div>';
+  });
 }
 
 function subscribeToLocks() {
   if (unsubscribeLocks) unsubscribeLocks();
-  const locksRef = ref(db, `lockedMonths`);
-  unsubscribeLocks = onValue(locksRef, snap => {
+  unsubscribeLocks = onValue(ref(db, `lockedMonths`), snap => {
     lockedMonthsCache = snap.val() || {};
     renderRespList();
     renderHistoryView();
+  }, err => {
+    console.error("Couldn't load month locks:", err);
   });
 }
 
@@ -1075,34 +1156,31 @@ async function toggleMonthLock(monthKey, shouldLock) {
     : `Unlock ${label}? Scores will be editable again.`;
   if (!confirm(msg)) return;
 
+  // Write the month lock and a per-week mirror in one atomic update.
+  // The database rules block score writes for any week in lockedWeeks,
+  // so locking is enforced server-side, not just in this UI.
+  const updates = {};
+  updates[`lockedMonths/${monthKey}`] = shouldLock
+    ? { lockedAt: Date.now(), lockedBy: currentUser.name }
+    : null;
+  for (const wk of weeksInMonth(monthKey)) {
+    updates[`lockedWeeks/${wk}`] = shouldLock ? monthKey : null;
+  }
+
   try {
-    if (shouldLock) {
-      await set(ref(db, `lockedMonths/${monthKey}`), {
-        lockedAt: Date.now(),
-        lockedBy: currentUser.name
-      });
-    } else {
-      await set(ref(db, `lockedMonths/${monthKey}`), null);
-    }
+    await update(ref(db), updates);
   } catch (err) {
     alert(`Couldn't ${action}: ${err.message}`);
   }
 }
 
-document.querySelectorAll(".tabs button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    document.getElementById("view-" + btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "history") renderHistoryView();
-  });
+document.querySelectorAll(".tabs [data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => selectTab(btn.dataset.tab));
 });
 
 document.querySelectorAll(".boy-tabs button").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".boy-tabs button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+    setActiveInGroup(".boy-tabs button", b => b === btn);
     selectedBoy = btn.dataset.boy;
     renderRespList();
   });
@@ -1110,29 +1188,17 @@ document.querySelectorAll(".boy-tabs button").forEach(btn => {
 
 document.querySelectorAll(".checkin-boy-tab").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".checkin-boy-tab").forEach(b => {
-      b.classList.remove("active");
-      b.style.background = "";
-      b.style.color = "var(--ink-soft)";
-    });
-    btn.classList.add("active");
-    btn.style.background = "var(--ink)";
-    btn.style.color = "var(--surface)";
-    renderCheckinView(btn.dataset.boy);
+    setActiveInGroup(".checkin-boy-tab", b => b === btn);
+    checkinBoy = btn.dataset.boy;
+    renderCheckinView();
   });
 });
-setTimeout(() => {
-  const first = document.querySelector(".checkin-boy-tab.active");
-  if (first) { first.style.background = "var(--ink)"; first.style.color = "var(--surface)"; }
-}, 0);
 
 function setViewingWeek(weekKey) {
   viewingWeekKey = weekKey;
   viewingMonthKey = weekKeyToMonthKey(weekKey);
   renderWeekView();
-  subscribeToWeekScores();
-  const activeBoyTab = document.querySelector(".checkin-boy-tab.active");
-  renderCheckinView(activeBoyTab ? activeBoyTab.dataset.boy : "boy1");
+  renderCheckinView();
   updateTotals();
 }
 
@@ -1193,7 +1259,7 @@ function renderRespList() {
     const row = document.createElement("div");
     row.className = "resp-row";
 
-    const currentScore = scoresCache?.[boyKey]?.[r.key]?.[scorerKey]?.value ?? null;
+    const currentScore = allScores?.[viewingWeekKey]?.[boyKey]?.[r.key]?.[scorerKey]?.value ?? null;
 
     row.innerHTML = `
       <div class="resp-name">${r.name}</div>
@@ -1202,8 +1268,8 @@ function renderRespList() {
         ${[1,2,3].map(n => `
           <button class="score-btn ${currentScore === n ? "selected" : ""}"
                   data-score="${n}" data-resp="${r.key}" data-current="${currentScore}"
-                  ${!canEdit ? "disabled" : ""}
-                  style="${!canEdit ? "opacity:0.55;cursor:default;" : ""}">
+                  aria-pressed="${currentScore === n}"
+                  ${!canEdit ? "disabled" : ""}>
             <span class="num">${n}</span>
             <span class="lbl">${n === 3 ? "Owned" : n === 2 ? "Mostly" : "Work"}</span>
           </button>
@@ -1270,19 +1336,7 @@ function saveScore(boyKey, respKey, scorerKey, score) {
   });
 }
 
-function subscribeToWeekScores() {
-  if (unsubscribeWeek) unsubscribeWeek();
-  const weekRef = ref(db, `scores/${viewingWeekKey}`);
-  unsubscribeWeek = onValue(weekRef, snap => {
-    scoresCache = snap.val() || {};
-    renderRespList();
-    const activeBoyTab = document.querySelector(".checkin-boy-tab.active");
-    renderCheckinView(activeBoyTab ? activeBoyTab.dataset.boy : "boy1");
-    updateTotals();
-  });
-}
-
-async function renderCheckinView(boyKey = "boy1") {
+function renderCheckinView() {
   const container = document.getElementById("checkinContent");
   const checkinLabel = document.getElementById("checkinLabel");
   if (checkinLabel) {
@@ -1291,8 +1345,7 @@ async function renderCheckinView(boyKey = "boy1") {
       ? "Sunday Check-In — Side-by-Side"
       : `Check-In · ${weekDateRange(viewingWeekKey)}`;
   }
-  const snap = await get(ref(db, `scores/${viewingWeekKey}/${boyKey}`));
-  const data = snap.val() || {};
+  const data = allScores?.[viewingWeekKey]?.[checkinBoy] || {};
 
   container.innerHTML = "";
   RESPONSIBILITIES.forEach(r => {
@@ -1325,36 +1378,26 @@ async function renderCheckinView(boyKey = "boy1") {
   });
 }
 
-async function updateTotals() {
-  const totalsEl = document.getElementById("totalsEl");
-  const weekKeys = weeksInMonth(viewingMonthKey);
-  const results = {};
-  for (const boy of BOYS) results[boy.key] = { sumAvg: 0, weeksCounted: 0 };
-
-  for (const wk of weekKeys) {
-    const snap = await get(ref(db, `scores/${wk}`));
-    const wkData = snap.val();
-    if (!wkData) continue;
-    for (const boy of BOYS) {
-      const boyData = wkData[boy.key];
-      if (!boyData) continue;
-      let weekSum = 0, weekCount = 0;
-      for (const r of RESPONSIBILITIES) {
-        const rs = boyData[r.key] || {};
-        const parent = rs.parent?.value;
-        if (parent != null) { weekSum += parent; weekCount++; }
-      }
-      if (weekCount > 0) {
-        results[boy.key].sumAvg += weekSum / weekCount;
-        results[boy.key].weeksCounted++;
-      }
+function monthlyAverage(monthKey, boyKey) {
+  let sumAvg = 0, weeksCounted = 0;
+  for (const wk of weeksInMonth(monthKey)) {
+    const boyData = allScores?.[wk]?.[boyKey];
+    if (!boyData) continue;
+    let weekSum = 0, weekCount = 0;
+    for (const r of RESPONSIBILITIES) {
+      const parent = boyData[r.key]?.parent?.value;
+      if (parent != null) { weekSum += parent; weekCount++; }
     }
+    if (weekCount > 0) { sumAvg += weekSum / weekCount; weeksCounted++; }
   }
+  return { monthAvg: weeksCounted > 0 ? (sumAvg / weeksCounted) : null, weeksCounted };
+}
 
+function updateTotals() {
+  const totalsEl = document.getElementById("totalsEl");
   totalsEl.innerHTML = "";
   for (const boy of BOYS) {
-    const r = results[boy.key];
-    const monthAvg = r.weeksCounted > 0 ? (r.sumAvg / r.weeksCounted) : null;
+    const { monthAvg } = monthlyAverage(viewingMonthKey, boy.key);
     const earned = calcEarned(monthAvg);
     const total = BASE_ALLOWANCE + earned;
     const card = document.createElement("div");
@@ -1368,42 +1411,20 @@ async function updateTotals() {
   }
 }
 
-async function renderHistoryView() {
+function renderHistoryView() {
   const container = document.getElementById("historyContent");
-  // Only show loading on first call
-  if (!container.innerHTML || container.querySelector(".loading")) {
-    container.innerHTML = '<div class="loading">Loading…</div>';
-  }
 
-  const allScoresSnap = await get(ref(db, `scores`));
-  const all = allScoresSnap.val() || {};
+  const monthsSet = new Set(Object.keys(allScores).map(weekKeyToMonthKey));
+  // Always include the current month (so Dad can lock an empty month if
+  // needed) and any month that is locked but has no scores.
+  monthsSet.add(currentMonthKey);
+  for (const mk of Object.keys(lockedMonthsCache)) monthsSet.add(mk);
 
-  const byMonth = {};
-  for (const wk in all) {
-    const [y, wStr] = wk.split("-W");
-    const week = parseInt(wStr, 10);
-    const jan4 = new Date(parseInt(y, 10), 0, 4);
-    const mid = new Date(jan4);
-    mid.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (week - 1) * 7 + 3);
-    const mk = getMonthKey(mid);
-    if (!byMonth[mk]) byMonth[mk] = {};
-    byMonth[mk][wk] = all[wk];
-  }
-
-  // Also include current month even if no scores yet (so Dad can lock an empty month if needed)
-  if (!byMonth[currentMonthKey]) byMonth[currentMonthKey] = {};
-
-  const months = Object.keys(byMonth).sort().reverse();
-  if (months.length === 0) {
-    container.innerHTML = '<div style="color:var(--ink-faint);padding:40px 20px;text-align:center;font-size:14px;">No history yet. Complete your first week to see it here.</div>';
-    return;
-  }
-
+  const months = [...monthsSet].sort().reverse();
   const canLock = LOCK_AUTHORIZED_PARENTS.includes(currentUser?.name);
 
   container.innerHTML = "";
   for (const mk of months) {
-    const monthData = byMonth[mk];
     const isLocked = !!lockedMonthsCache[mk];
     const block = document.createElement("div");
     block.className = "history-month";
@@ -1421,22 +1442,8 @@ async function renderHistoryView() {
     `;
 
     let rowsHtml = "";
-    let hasData = false;
     for (const boy of BOYS) {
-      let sumAvg = 0, weeksCounted = 0;
-      for (const wk in monthData) {
-        const boyData = monthData[wk][boy.key];
-        if (!boyData) continue;
-        let weekSum = 0, weekCount = 0;
-        for (const r of RESPONSIBILITIES) {
-          const rs = boyData[r.key] || {};
-          const parent = rs.parent?.value;
-          if (parent != null) { weekSum += parent; weekCount++; }
-        }
-        if (weekCount > 0) { sumAvg += weekSum / weekCount; weeksCounted++; }
-      }
-      if (weeksCounted > 0) hasData = true;
-      const monthAvg = weeksCounted > 0 ? (sumAvg / weeksCounted) : null;
+      const { monthAvg, weeksCounted } = monthlyAverage(mk, boy.key);
       const earned = calcEarned(monthAvg);
       const total = BASE_ALLOWANCE + earned;
       rowsHtml += `
@@ -1466,23 +1473,24 @@ async function renderHistoryView() {
   });
 }
 
+// Restores the session on page load. Manual sign-in flows set `signingIn`
+// while they run and call enterApp() themselves, so this handler skips
+// them (it would otherwise race the flow that writes the role entry).
 onAuthStateChanged(auth, async user => {
-  if (user && !currentUser) {
-    const snap = await get(ref(db, `roles/${user.uid}`));
-    if (snap.exists()) {
-      const roleData = snap.val();
-      if (roleData.role === "parent") {
-        const email = user.email;
-        const name = Object.keys(PARENT_EMAILS).find(k => PARENT_EMAILS[k] === email) || "Parent";
-        currentUser = { role: "parent", name, uid: user.uid };
-        enterApp();
-      } else if (roleData.role === "boy") {
-        const boy = BOYS.find(b => b.key === roleData.boyKey);
-        if (boy) {
-          currentUser = { role: "boy", name: boy.name, uid: user.uid, boyKey: boy.key };
-          enterApp();
-        }
-      }
+  if (!user || currentUser || signingIn) return;
+  const snap = await get(ref(db, `roles/${user.uid}`)).catch(() => null);
+  if (currentUser || signingIn) return;
+  if (!snap || !snap.exists()) return;
+  const roleData = snap.val();
+  if (roleData.role === "parent") {
+    const name = Object.keys(PARENT_EMAILS).find(k => PARENT_EMAILS[k] === user.email) || "Parent";
+    currentUser = { role: "parent", name, uid: user.uid };
+    enterApp();
+  } else if (roleData.role === "boy") {
+    const boy = BOYS.find(b => b.key === roleData.boyKey);
+    if (boy) {
+      currentUser = { role: "boy", name: boy.name, uid: user.uid, boyKey: boy.key };
+      enterApp();
     }
   }
 });
