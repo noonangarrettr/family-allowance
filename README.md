@@ -178,6 +178,14 @@ This part is important. These rules stop anyone who finds your URL from messing 
 
 It should say "Rules published". If it shows an error, stop and send me the error — don't keep going.
 
+**If I send you an updated `database.rules.json` later, repeat this part with the new file.** The app and the rules work as a pair — an old rules file can make new features (like month locking) fail with "permission denied" errors.
+
+What the rules enforce:
+- Only signed-in family members can read scores
+- Parents can only write parent scores; each boy can only write his own self-scores
+- Only the family's own accounts (`mom@`, `dad@`, `boy1@`, `boy2@family.local`) can register a role — a stranger who finds the URL can't get access
+- Once Dad locks a month, nobody (including parents) can change its scores until he unlocks it
+
 ---
 
 ## PART 6 — Put It on GitHub Pages
@@ -296,8 +304,14 @@ If we iterate on the app, I'll give you a new `index.html`. To update:
 
 ---
 
+## Locking a Month
+
+After you pay out for a month, open the **History** tab and tap **Lock** next to that month. Locked months are frozen — nobody can change scores in them, and the database enforces this (not just the app screen). Tap **Unlock** if you need to fix something.
+
+Only Dad's account can lock and unlock. To change that, both `LOCK_AUTHORIZED_PARENTS` in `index.html` and the `dad@family.local` checks under `lockedMonths`/`lockedWeeks` in `database.rules.json` need updating together.
+
+---
+
 Once you've got it running, tell me how it feels. Likely next tweaks:
-- Adjust the visual polish
 - Add a weekly reminder notification
-- A "lock the month" button that prevents any more edits after you pay out
 - CSV export

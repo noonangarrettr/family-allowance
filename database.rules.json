@@ -1,16 +1,16 @@
 {
   "rules": {
     "scores": {
-      ".read": "auth != null",
+      ".read": "auth != null && root.child('roles/' + auth.uid).exists()",
       "$week": {
         "$boy": {
           "$responsibility": {
             "parent": {
-              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'parent'",
+              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'parent' && !root.child('lockedWeeks/' + $week).exists()",
               ".validate": "newData.hasChildren(['value','ts','by']) && newData.child('value').isNumber() && newData.child('value').val() >= 1 && newData.child('value').val() <= 3"
             },
             "self": {
-              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'boy' && root.child('roles/' + auth.uid + '/boyKey').val() == $boy",
+              ".write": "auth != null && root.child('roles/' + auth.uid + '/role').val() == 'boy' && root.child('roles/' + auth.uid + '/boyKey').val() == $boy && !root.child('lockedWeeks/' + $week).exists()",
               ".validate": "newData.hasChildren(['value','ts','by']) && newData.child('value').isNumber() && newData.child('value').val() >= 1 && newData.child('value').val() <= 3"
             }
           }
@@ -18,14 +18,36 @@
       }
     },
     "roles": {
-      ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid == $uid && !data.exists()"
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid && !data.exists()",
+        ".validate": "(newData.child('role').val() == 'parent' && (auth.token.email == 'mom@family.local' || auth.token.email == 'dad@family.local')) || (newData.child('role').val() == 'boy' && (newData.child('boyKey').val() == 'boy1' || newData.child('boyKey').val() == 'boy2') && auth.token.email == newData.child('boyKey').val() + '@family.local')"
+      }
+    },
+    "lockedMonths": {
+      ".read": "auth != null && root.child('roles/' + auth.uid).exists()",
+      "$month": {
+        ".write": "auth != null && auth.token.email == 'dad@family.local'",
+        ".validate": "newData.hasChildren(['lockedAt','lockedBy'])"
+      }
+    },
+    "lockedWeeks": {
+      ".read": "auth != null && root.child('roles/' + auth.uid).exists()",
+      "$week": {
+        ".write": "auth != null && auth.token.email == 'dad@family.local'",
+        ".validate": "newData.isString()"
       }
     },
     "publicMeta": {
       ".read": true,
-      ".write": "auth != null"
+      "boy1_pinSet": {
+        ".write": "auth != null && (auth.token.email == 'boy1@family.local' || auth.token.email == 'mom@family.local' || auth.token.email == 'dad@family.local')",
+        ".validate": "newData.isBoolean()"
+      },
+      "boy2_pinSet": {
+        ".write": "auth != null && (auth.token.email == 'boy2@family.local' || auth.token.email == 'mom@family.local' || auth.token.email == 'dad@family.local')",
+        ".validate": "newData.isBoolean()"
+      }
     }
   }
 }
